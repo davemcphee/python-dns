@@ -64,3 +64,23 @@ class ResourceRecordSet(object):
         ttl = int(resource["ttl"])
         rrdatas = resource["rrdatas"]
         return cls(name, record_type, ttl, rrdatas, zone=zone)
+
+    def update(self, zone, client):
+        """API call: update the existing record set via PATCH request.
+
+        See https://cloud.google.com/dns/docs/reference/v1/resourceRecordSets/patch
+
+        :type zone: :class:`google.cloud.dns.zone.ManagedZone`
+        :param zone: A zone which holds this record set.
+
+        :type client: :class:`google.cloud.dns.client.Client`
+        :param client:
+            the client to use.
+        """
+        path = "%s/rrsets/%s/%s" % (zone.path, self.name, self.record_type)
+        record_data = {
+            "ttl": self.ttl,
+            "rrdatas": self.rrdatas,
+            "update_mask": {"paths": ["rrset.ttl", "rrset.rrdatas"]},
+        }
+        client._connection.api_request(method="PATCH", path=path, data=record_data)
